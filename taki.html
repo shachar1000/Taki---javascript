@@ -1,0 +1,343 @@
+<html>
+  <head>
+<style>
+.card {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  text-align: center;
+  color: black;
+  font-family: "Arial Black", Gadget, sans-serif;
+font-size: 60px;
+word-spacing: -2.8px;
+font-weight: 700;
+}
+#current {
+  position: absolute;
+  top: 400px;
+  left: 875px;
+}
+.stock {
+  position: fixed;
+    background:  linear-gradient(to bottom, #33ccff 0%, #66ff99 100%);
+    font-family: "Arial Black", Gadget, sans-serif;
+    color: black;
+    border: 2px solid black;
+    width: 180px;
+    height: 180px;
+    font-size: 60px;
+    transition-duration: 0.1s;
+    cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 150px;
+}
+
+.stock:hover {
+    background: linear-gradient(to bottom, #66ffff 0%, #0066ff 100%);
+    color: white;
+}
+.colorBtn {
+	width: 100px;
+  height: 100px;
+  position: absolute;
+}
+
+</style>
+  </head>
+  <body>
+<div class="card" id="current"> </div>
+<div class="stock" onclick="stock()"> קופה </div>
+
+<script>
+// variable declerations
+var d = 0;
+var plusX = false;
+var switchX = 0;
+var xxx = 7;
+var i = 0;
+var turn = 0;
+var o = 0; // current card in gameCards array
+var gameCards = [{number: 3, color: 'red'}]; // first card
+var pCards = []; // array that holdes 2 decks of cards
+var numberOfCards = 116;
+var cards = []; // holds all cards before distribution
+var colors = ["blue","red","yellow","green"];
+var numbers = [];
+var numberOfPlayers = 2;
+var fill = [[],[]];
+var v = 0;
+
+for (var i = 0; i < 9; i++) {
+  numbers[i] = (i+1);
+}
+
+//adds cards to cards array
+for (var i = 0; i < numbers.length; i++) {
+  for (var x = 0; x < colors.length; x++) {
+    for (var m = 0; m < 2; m++) {
+      cards.push({type: 'none', color: colors[x], number: numbers[i]});
+    }
+  }
+}
+for (var i = 0; i < colors.length; i++) {
+  for (var m = 0; m < 2; m++) {
+    cards.push({color: colors[i], type: "switch"});
+    cards.push({color: colors[i], type: "plus"});
+  }
+}
+for (var i = 0; i < 4; i++) {
+  cards.push({type: 'change'});
+}
+
+//shuffle array of cards
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+shuffleArray(cards);
+
+// distribute cards to pCards (2 decks)
+function distribute() {
+  for (var i = 0; i < 2; i++) {
+    pCards.push(new Array(8));
+    for (var l = 0; l < 8; l++) {
+      if (i==0) {
+      pCards[i][l] = cards[l];
+    } else {
+      pCards[i][l] = cards[l+8];
+      }
+    }
+  }
+}
+distribute();
+var y = 0;
+function makeCard(content1, color1, key, i1, x1) {
+  var div = document.createElement('div');
+  div.textContent = content1;
+  div.setAttribute('class', 'card');
+  div.style.background = color1;
+  div.style.left = ((x1-y+1)*110)+385; div.style.top = (i1*800)+50-(i1*50);
+  document.body.appendChild(div);
+  div.id = ("" + i1 + x1); // string
+  listeners(x1, key, div, color1);
+}
+
+// keys: 0 - switch, 1 - number, 2 - plus, 3 - change color
+
+function listeners(x1, key, div, color1) {
+  switch(key) {
+    case 0: div.addEventListener('click', function(){
+      if (x1 >= 10) {
+      putCardSwitch(color1, div.id, 1);
+    } else {putCardSwitch(color1, div.id, 0)}
+  }); break; //////////
+    case 1: div.addEventListener('click', function(){
+      if (x1 >= 10) {putCard(div.id, 1);}
+      else {putCard(div.id, 0)}
+    }); break; ///////////
+    case 2: div.addEventListener('click', function(){
+      if (x1 >= 10) {
+      putCardPlus(color1, div.id, 1);
+    } else {putCardPlus(color1, div.id, 0)}
+  }); break; //////////
+    case 3: div.addEventListener('click', function(){
+      create(div.id);
+    }); break; /////////
+  }
+}
+
+// after distribution, makes cards accordingly to the pCards array
+function translateArrToCards() {
+  for (var i = 0; i < 2; i++) {
+    for (var x = 0; x < 8; x++) {
+      if (pCards[i][x].type == "switch") {
+        makeCard("⮒", pCards[i][x].color, 0, i, x); }
+        else if(pCards[i][x].type == "plus") {
+          makeCard("+", pCards[i][x].color, 2, i, x);
+        }
+          else if (pCards[i][x].type == "change") {
+            makeCard("⚏", 'linear-gradient(to right, red, yellow, green, blue)', 3, i, x);
+          }
+            else {
+              makeCard(pCards[i][x].number, pCards[i][x].color, 1, i, x);
+            }
+      }
+  }
+}
+translateArrToCards();
+
+function putCard(card, check) {
+    if (card[0] == turn) {
+      var second = (check != 1 ? card[1] : (Number(card[1]*10))+Number(card[2]));
+      if (gameCards[o].color == pCards[card[0]][second].color ||
+          gameCards[o].number == pCards[card[0]][second].number ||
+          gameCards[o].type == pCards[card[0]][second].type
+      ){
+        document.getElementById(card).style.display = "none";
+        o++;
+        gameCards.push({number: pCards[card[0]][second].number,
+                        color: pCards[card[0]][second].color});
+        drawCard();
+        checkWin();
+        changeTurn();
+      }
+    }
+}
+
+function drawCard() {
+  var div = document.getElementById('current');
+  div.style.backgroundColor = gameCards[o].color;
+  div.innerHTML = gameCards[o].number;
+  if (gameCards[o].number === undefined) {
+    if (gameCards[o].type == 'switch') {div.innerHTML = "⮒";}
+    else {div.innerHTML = "+";}
+  }
+}
+drawCard(); // invoke for gameCards[0] (first card)
+
+function putCardSwitch(color2, id1, check) {
+  if (id1[0] == turn) {
+  if (gameCards[o].color == color2 || gameCards[o].type == "switch") {
+    document.getElementById(id1).style.display = "none";
+    o++;
+    if (switchX == 1) {switchX=0}
+    if (switchX == 0) {switchX=1}
+    var second = (check != 1 ? id1[1] : (Number(id1[1]*10))+Number(id1[2]));
+    gameCards.push({color: pCards[id1[0]][second].color, type: "switch"});
+    drawCard();
+    checkWin();
+    changeTurn();
+  }}
+}
+
+var t = 0;
+var countCheck;
+var x0 = 8; var x1 = 8;
+var arrayOfX = [x0, x1]; // x for each deck (player)
+
+function stock() {
+  if (getElem() === false) {
+    switch(cards[8 * 2 + t].type) {
+      case 'switch': pCards[turn].push({type: "switch", color: cards[8 * 2 + t].color});
+      makeCard("⮒", cards[8 * 2 + t].color, 0, turn, arrayOfX[turn]);
+      arrayOfX[turn]+=1; break;
+      case 'plus': pCards[turn].push({type: "plus", color: cards[8 * 2 + t].color});
+      makeCard("+", cards[8 * 2 + t].color, 2, turn, arrayOfX[turn]);
+      arrayOfX[turn]+=1; break;
+      case 'none': pCards[turn].push({color: cards[8 * 2 + t].color, number: cards[8 * 2 + t].number});
+      makeCard(cards[8 * 2 + t].number, cards[8 * 2 + t].color, 1, turn, arrayOfX[turn]);
+      arrayOfX[turn]+=1; break;
+      case 'change': makeCard("⚏", 'linear-gradient(to right, red, yellow, green, blue)', 3, turn, arrayOfX[turn]);
+      arrayOfX[turn]+=1; break;
+    }
+    t++;
+    changeTurn();
+  }
+}
+
+function putCardPlus(color2, id1, check) {
+if (id1[0] == turn) {
+  if (gameCards[o].color == color2 || gameCards[o].type == "plus") {
+    document.getElementById(id1).style.display = "none";
+    o++;
+    d=0;
+    plusX = false; // default
+    var second = (check != 1 ? id1[1] : (Number(id1[1]*10))+Number(id1[2]));
+    gameCards.push({color: pCards[id1[0]][second].color, type: "plus"});
+    drawCard();
+    var elements = document.querySelectorAll( 'body *' );
+    for (var i = 0; i < elements.length; i++) {
+      if (elements[i].className == 'card' && elements[i].style.display != 'none') {
+        if (elements[i].id != 'current') {
+          var id = elements[i].id;
+        if(id[0] == turn) {
+          var second = (id.length == 3 ? (Number(id[1]*10))+Number(id[2]) : id[1]);
+            if (gameCards[o].color == pCards[id[0]][second].color ||
+              gameCards[o].type == pCards[id[0]][second].type || pCards[id[0]][second].type =='change'
+            ) {  plusX = true; break;
+            }}
+        }
+      }
+    }
+    checkWin();
+    changeTurn();
+  }}
+}
+
+function changeTurn() {
+if (d>=1) {plusX = false;}
+  if (plusX == false) {
+    d=0;
+    if(switchX == 0) {turn++; if (turn > 1) {turn = 0}}
+    else {turn--; if (turn < 0) {turn = 1}}
+  } else {d++}
+}
+
+function getElem() { // check if there are suitable cards to put
+  var elements = document.querySelectorAll( 'body *' );
+  for (var i = 0; i < elements.length; i++) {
+    if (elements[i].className == 'card' && elements[i].style.display != 'none') {
+      if (elements[i].id != 'current') {
+        var id = elements[i].id;
+        var second = (id.length == 3 ? (Number(id[1]*10))+Number(id[2]) : id[1]);
+      if(id[0] == turn) {
+          if (gameCards[o].color == pCards[id[0]][second].color || pCards[id[0]][second].type == 'change' ||
+            gameCards[o].number == pCards[id[0]][second].number ||
+            (gameCards[o].type == pCards[id[0]][second].type && pCards[id[0]][second].type !== undefined &&
+              pCards[id[0]][second].type !== 'none' && pCards[id[0]][second].type !== null
+          )) {   return true;
+          }}
+      }
+    }
+  } return false;
+}
+
+
+function create(idX) {
+    if(idX[0] == turn) {
+  for (var i = 0; i < colors.length; i++) {
+    var colorBtn = document.createElement('button');
+    colorBtn.setAttribute('class','colorBtn');
+    if (i % 2 == 0) {colorBtn.style.left = 100;} else {
+    colorBtn.style.left = 200;}
+    if (i < (colors.length/2)) {colorBtn.style.top = 300;} else {
+    colorBtn.style.top = 400;}
+    colorBtn.style.backgroundColor = colors[i];
+    colorBtn.id = i+500; // +500 for the sake of not having 2 identical IDs
+    colorBtn.addEventListener('click', function(){
+      changeColor(this.id, idX);
+    });
+    document.body.appendChild(colorBtn);
+  }
+}
+}
+
+function changeColor(clr, idChange) { // clr = colorBtn.id, idChange = id of change color card
+  gameCards[o].color = colors[clr-500];
+  document.getElementById('current').style.backgroundColor = colors[clr-500];
+  changeTurn();
+  var arr = document.getElementsByClassName('colorBtn');
+  for (var i = 0; i < arr.length; i++) {
+    arr[i].style.display = 'none';
+  }
+document.getElementById(idChange).style.display = "none";
+}
+
+function checkWin() { // check if there are no cards after every putCard function
+  var elements = document.querySelectorAll( 'body *' );
+  for (var i = 0; i < elements.length; i++) {
+    if (elements[i].id[0]==turn) { // only for current turn, this function is before changeTurn
+      if (elements[i].className == 'card' && elements[i].style.display != 'none' && elements[i].id != 'current') {
+          return; // exit, continue to changeTurn
+        }
+    }
+  } //alert('player '+turn+'is victorious');
+      location.reload();
+}
+    </script>
+  </body>
+</html>
